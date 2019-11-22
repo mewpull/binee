@@ -1,5 +1,6 @@
 package windows
 
+import "fmt"
 import "gopkg.in/yaml.v2"
 import "os"
 import "io/ioutil"
@@ -348,4 +349,31 @@ func (emu *WinEmulator) SetLastError(e uint64) error {
 	}
 	err := emu.Uc.MemWrite(emu.MemRegions.TibAddress+offset, bs)
 	return err
+}
+
+// helper function for GetLastError hook in kernel32, winbase
+func (emu *WinEmulator) GetLastError() (uint64, error) {
+	var offset uint64
+	switch emu.PtrSize {
+	case 4:
+		offset = 0x34
+	case 8:
+		offset = 0x68
+	default:
+		panic(fmt.Errorf("support for pointer size %d not yet implemented", emu.PtrSize))
+	}
+	bs, err := emu.Uc.MemRead(emu.MemRegions.TibAddress+offset, emu.PtrSize)
+	if err != nil {
+		return 0, err
+	}
+	switch emu.PtrSize {
+	case 4:
+		offset = 0x34
+		return uint64(binary.LittleEndian.Uint32(bs)), nil
+	case 8:
+		offset = 0x68
+		return binary.LittleEndian.Uint64(bs), nil
+	default:
+		panic(fmt.Errorf("support for pointer size %d not yet implemented", emu.PtrSize))
+	}
 }
