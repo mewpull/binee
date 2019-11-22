@@ -342,7 +342,16 @@ func KernelbaseHooks(emu *WinEmulator) {
 			return SkipFunctionStdCall(true, 0x2)(emu, in)
 		},
 	})
-	emu.AddHook("", "GetLastError", &Hook{Parameters: []string{}})
+	emu.AddHook("", "GetLastError", &Hook{
+		Parameters: []string{},
+		Fn: func(emu *WinEmulator, in *Instruction) bool {
+			if e, err := emu.GetLastError(); err == nil {
+				return SkipFunctionStdCall(true, e)(emu, in)
+			} else {
+				return SkipFunctionStdCall(false, 0)(emu, in)
+			}
+		},
+	})
 	emu.AddHook("", "GetLastActivePopup", &Hook{
 		Parameters: []string{"hWnd"},
 		Fn:         SkipFunctionStdCall(true, 0x1),
