@@ -7,10 +7,16 @@ func User32Hooks(emu *WinEmulator) {
 	emu.AddHook("", "NtUserGetThreadState", &Hook{
 		Parameters: []string{"Routine"},
 	})
-	emu.AddHook("", "ShowWindow", &Hook{Parameters: []string{"hWnd", "nCmdShow"}, Fn: SkipFunctionStdCall(true, 0x1)})
 	emu.AddHook("", "SendMessageA", &Hook{Parameters: []string{"hWnd", "Msg", "wParam", "lParam"}, Fn: SkipFunctionStdCall(true, 0x1)})
 	emu.AddHook("", "SetCursorPos", &Hook{Parameters: []string{"X", "Y"}, Fn: SkipFunctionStdCall(true, 0x1)})
 	emu.AddHook("", "SetTimer", &Hook{Parameters: []string{"hWnd", "nIDEvent", "uElapse", "lpTimerFunc"}, Fn: SkipFunctionStdCall(true, 0x1)})
+	emu.AddHook("", "ShowCursor", &Hook{
+		Parameters: []string{"bShow"},
+		Fn: func(emu *WinEmulator, in *Instruction) bool {
+			return SkipFunctionStdCall(true, in.Args[0])(emu, in)
+		},
+	})
+	emu.AddHook("", "ShowWindow", &Hook{Parameters: []string{"hWnd", "nCmdShow"}, Fn: SkipFunctionStdCall(true, 0x1)})
 	emu.AddHook("", "wsprintfA", &Hook{
 		Parameters: []string{"lpstr", "a:lpcstr"},
 	})
