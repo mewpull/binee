@@ -196,8 +196,12 @@ func main() {
 	}
 
 	if options.SingleStep == false {
-		emu.Start()
+		if err := emu.Start(); err != nil {
+			log.Printf("error during single step; %v", err)
+		}
 	} else {
-		emu.StartSingleStep()
+		if err := emu.StartSingleStep(); err != nil {
+			log.Printf("error during single step; %v", err)
+		}
 	}
 }
