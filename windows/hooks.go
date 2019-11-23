@@ -1,14 +1,19 @@
 package windows
 
-import "encoding/binary"
-import "runtime"
-import "fmt"
-import "github.com/carbonblack/binee/util"
-import "strings"
-import "bytes"
-import "encoding/json"
-import "os"
-import uc "github.com/unicorn-engine/unicorn/bindings/go/unicorn"
+import (
+	"bytes"
+	"encoding/binary"
+	"encoding/json"
+	"fmt"
+	"os"
+	"runtime"
+	"strings"
+
+	"github.com/carbonblack/binee/util"
+
+	uc "github.com/unicorn-engine/unicorn/bindings/go/unicorn"
+	"golang.org/x/arch/x86/x86asm"
+)
 
 func (emu *WinEmulator) LoadHooks() {
 	KernelbaseHooks(emu)
@@ -261,8 +266,9 @@ func (self *Instruction) Address() string {
 
 func (self *Instruction) Disassemble() string {
 	buf, _ := self.emu.Uc.MemRead(self.Addr, uint64(self.Size))
-	if inst, err := self.emu.Cs.Disasm(buf, 0, uint64(self.Size)); err == nil {
-		return fmt.Sprintf("%s %s", inst[0].Mnemonic, inst[0].OpStr)
+	mode := int(8 * self.emu.PtrSize)
+	if inst, err := x86asm.Decode(buf, mode); err == nil {
+		return inst.String()
 	}
 	return ""
 }
